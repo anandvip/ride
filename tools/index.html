@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MotoTyre PSI • Rider Weight Calculator</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #111111;
+      --border:    #222222;
+      --text:      #e5e5e5;
+      --text-dim:  #a1a1aa;
+      --accent:    #facc15;     /* yellow-400 */
+      --front:     #60a5fa;     /* blue-400 */
+      --rear:      #f87171;     /* red-400 */
+      --warning:   #dc2626;
+      --safe:      #10b981;
+
+      --radius:    1.25rem;
+      --gap:       2rem;
+      --pad:       1.75rem;
+
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .title-font { font-family: 'Space Grotesk', sans-serif; }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      min-height: 100dvh;
+      padding: clamp(1rem, 5vw, 3rem) 1.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin-inline: auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-block-end: var(--gap);
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 600;
+      letter-spacing: -0.05em;
+      color: var(--accent);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #111;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .pulse {
+      width: 0.75rem;
+      height: 0.75rem;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+    /* ─── Result Card ──────────────────────────────────────── */
+    #result-section {
+      margin-block-end: var(--gap);
+      scroll-margin-top: 2rem;
+    }
+
+    .result-card {
+      background: linear-gradient(to bottom right, var(--surface), #0a0a0a);
+      border: 1px solid rgba(250,204,21,0.12);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      box-shadow: 0 10px 30px -10px black;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @container (min-width: 500px) {
+      .result-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .tyre-block {
+      text-align: center;
+    }
+
+    .tyre-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-block-end: 0.5rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 50%;
+    }
+
+    #frontPsi, #rearPsi {
+      font-size: clamp(4rem, 12vw, 7rem);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.04em;
+    }
+
+    #frontPsi { color: var(--front); }
+    #rearPsi  { color: var(--rear);  }
+
+    .load-info {
+      margin-top: 0.5rem;
+      color: var(--text-dim);
+      font-size: 1rem;
+    }
+
+    #overloadWarning {
+      margin-top: 1.5rem;
+      background: rgba(220,38,38,0.15);
+      border: 1px solid rgba(220,38,38,0.4);
+      color: #fca5a5;
+      padding: 1rem;
+      border-radius: var(--radius);
+      text-align: center;
+      font-weight: 500;
+    }
+
+    /* ─── Total Weight Banner ──────────────────────────────── */
+    #total-banner {
+      background: rgba(17,17,17,0.7);
+      border: 1px solid rgba(250,204,21,0.08);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      margin-block-end: var(--gap);
+    }
+
+    #totalKg {
+      font-size: clamp(3rem, 10vw, 5rem);
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    /* ─── Form Sections ────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      gap: var(--gap);
+    }
+
+    @media (min-width: 1024px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: var(--pad);
+      border: 1px solid var(--border);
+    }
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-block-end: 1.5rem;
+    }
+
+    .step-dot {
+      width: 2.25rem;
+      height: 2.25rem;
+      background: var(--accent);
+      color: black;
+      border-radius: 0.75rem;
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--text-dim);
+      margin-block-end: 0.5rem;
+      font-weight: 500;
+    }
+
+    input[type="number"], input[type="range"] {
+      width: 100%;
+      background: #0f0f0f;
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      height: 0.5rem;
+      cursor: pointer;
+    }
+
+    .slider-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+    }
+
+    .distribution {
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+
+    .small-hint {
+      font-size: 0.875rem;
+      color: #fbbf24;
+      margin-top: 1rem;
+    }
+
+    /* ─── Tips ─────────────────────────────────────────────── */
+    .tips {
+      margin-top: 3rem;
+      font-size: 0.95rem;
+      color: var(--text-dim);
+    }
+
+    .tips strong { color: #6ee7b7; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div>
+      <h1 class="title-font">MotoTyre PSI</h1>
+      <p style="color:var(--text-dim); margin-top:0.25rem;">Cold tyre pressure based on your real riding weight</p>
+    </div>
+    <div class="live-badge">
+      <div class="pulse"></div>
+      LIVE
+    </div>
+  </header>
+
+  <!-- RESULT – stays at top -->
+  <section id="result-section">
+    <div class="result-card">
+      <h2 style="text-align:center; margin-bottom:1.5rem; font-size:1.75rem;">Recommended Cold Pressure</h2>
+
+      <div class="result-grid">
+        <div class="tyre-block">
+          <div class="tyre-label">
+            <div class="dot" style="background:var(--front)"></div>
+            FRONT
+          </div>
+          <div id="frontPsi">29</div>
+          <div class="load-info">
+            <span id="frontLoad">139 kg</span> • <span id="frontPctVal">45</span>%
+          </div>
+        </div>
+
+        <div class="tyre-block">
+          <div class="tyre-label">
+            <div class="dot" style="background:var(--rear)"></div>
+            REAR
+          </div>
+          <div id="rearPsi">36</div>
+          <div class="load-info">
+            <span id="rearLoad">171 kg</span> • <span id="rearPctVal">55</span>%
+          </div>
+        </div>
+      </div>
+
+      <div id="overloadWarning" hidden>
+        ⚠️ Warning: One or both tyres overloaded (exceeds sidewall max load)!
+      </div>
+    </div>
+  </section>
+
+  <!-- Total -->
+  <div id="total-banner">
+    <div style="font-size:0.875rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">
+      Total Riding Weight
+    </div>
+    <div id="totalKg">310</div>
+    <div id="totalLb" style="color:var(--text-dim); font-size:1.25rem; margin-top:0.25rem;">683 lbs</div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="form-grid">
+
+    <!-- Weights + Distribution -->
+    <div class="card">
+      <h3><span class="step-dot">1</span> Your Weights</h3>
+
+      <div style="display:grid; gap:1.5rem;">
+        <div>
+          <label>Kerb weight (full tank + fluids)</label>
+          <div style="display:flex; gap:0.75rem;">
+            <input id="kerb" type="number" value="210">
+            <span style="align-self:end; color:var(--text-dim);">kg</span>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;">
+          <div>
+            <label>Rider</label>
+            <input id="rider" type="number" value="85">
+          </div>
+          <div>
+            <label>Passenger</label>
+            <input id="passenger" type="number" value="0">
+          </div>
+          <div>
+            <label>Gear / luggage</label>
+            <input id="gear" type="number" value="15">
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:2.5rem;">
+        <h3 style="margin-bottom:1rem;"><span class="step-dot">2</span> Weight Distribution</h3>
+        <input type="range" id="frontPct" min="35" max="55" value="45" step="1">
+        <div class="slider-labels">
+          <span>Front bias (sport)</span>
+          <span>Rear bias (tourer)</span>
+        </div>
+        <div class="distribution">
+          <span id="frontPctVal">45</span>% front • <span id="rearPctVal">55</span>% rear
+        </div>
+      </div>
+    </div>
+
+    <!-- Tyre Specs -->
+    <div class="card" style="height:fit-content;">
+      <h3><span class="step-dot">3</span> Tyre Sidewall Specs</h3>
+
+      <div style="display:grid; gap:1.5rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <label>Front Max Load</label>
+            <input id="frontMaxLoad" type="number" value="210">
+            <div class="small-hint">kg</div>
+          </div>
+          <div>
+            <label>Front Max PSI</label>
+            <input id="frontMaxPsi" type="number" value="42">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div>
+            <label>Rear Max Load</label>
+            <input id="rearMaxLoad" type="number" value="280">
+            <div class="small-hint">kg</div>
+          </div>
+          <div>
+            <label>Rear Max PSI</label>
+            <input id="rearMaxPsi" type="number" value="42">
+          </div>
+        </div>
+
+        <p class="small-hint">
+          Check tyre sidewall — example: “Max Load 210 kg at 42 psi”
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tips">
+    <p style="color:#6ee7b7; font-weight:500; margin-bottom:0.75rem;">Quick reminders</p>
+    <ul style="list-style:none; display:grid; gap:0.5rem; padding-left:1.25rem;">
+      <li>• Always set when tyres are <strong>cold</strong></li>
+      <li>• Add 2–4 psi to rear with passenger / heavy load</li>
+      <li>• Never exceed sidewall max pressure</li>
+      <li>• Check weekly + before long rides</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+// Same logic as before – no changes needed
+const els = {
+  kerb:       document.getElementById('kerb'),
+  rider:      document.getElementById('rider'),
+  passenger:  document.getElementById('passenger'),
+  gear:       document.getElementById('gear'),
+  frontPct:   document.getElementById('frontPct'),
+
+  totalKg:    document.getElementById('totalKg'),
+  totalLb:    document.getElementById('totalLb'),
+
+  frontPctVal: document.getElementById('frontPctVal'),
+  rearPctVal:  document.getElementById('rearPctVal'),
+
+  frontLoad:  document.getElementById('frontLoad'),
+  rearLoad:   document.getElementById('rearLoad'),
+
+  frontPsi:   document.getElementById('frontPsi'),
+  rearPsi:    document.getElementById('rearPsi'),
+
+  frontMaxLoad: document.getElementById('frontMaxLoad'),
+  frontMaxPsi:  document.getElementById('frontMaxPsi'),
+  rearMaxLoad:  document.getElementById('rearMaxLoad'),
+  rearMaxPsi:   document.getElementById('rearMaxPsi'),
+
+  warning:    document.getElementById('overloadWarning'),
+};
+
+function calculate() {
+  const total = 
+    Number(els.kerb.value     || 0) +
+    Number(els.rider.value    || 0) +
+    Number(els.passenger.value|| 0) +
+    Number(els.gear.value     || 0);
+
+  els.totalKg.textContent = Math.round(total);
+  els.totalLb.textContent = Math.round(total * 2.20462) + " lbs";
+
+  const frontPct = Number(els.frontPct.value) || 45;
+  const rearPct  = 100 - frontPct;
+
+  els.frontPctVal.textContent = frontPct;
+  els.rearPctVal.textContent  = rearPct;
+
+  const frontLoad = Math.round(total * frontPct / 100);
+  const rearLoad  = Math.round(total * rearPct  / 100);
+
+  els.frontLoad.textContent = frontLoad + " kg";
+  els.rearLoad.textContent  = rearLoad  + " kg";
+
+  const fMaxLoad = Number(els.frontMaxLoad.value) || 1;
+  const fMaxPsi  = Number(els.frontMaxPsi.value)  || 1;
+  const rMaxLoad = Number(els.rearMaxLoad.value)  || 1;
+  const rMaxPsi  = Number(els.rearMaxPsi.value)   || 1;
+
+  let frontPsi = Math.round((frontLoad / fMaxLoad) * fMaxPsi);
+  let rearPsi  = Math.round((rearLoad  / rMaxLoad)  * rMaxPsi);
+
+  frontPsi = Math.max(24, Math.min(frontPsi, fMaxPsi));
+  rearPsi  = Math.max(28, Math.min(rearPsi,  rMaxPsi));
+
+  els.frontPsi.textContent = frontPsi;
+  els.rearPsi.textContent  = rearPsi;
+
+  const overloaded = (frontLoad > fMaxLoad) || (rearLoad > rMaxLoad);
+  els.warning.hidden = !overloaded;
+}
+
+// Attach listeners
+document.querySelectorAll('input').forEach(el => {
+  el.addEventListener('input', calculate);
+});
+
+// Initial calc + mobile scroll nudge
+calculate();
+
+if (window.innerWidth < 768) {
+  setTimeout(() => {
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 600);
+}
+</script>
+
+</body>
+</html>
