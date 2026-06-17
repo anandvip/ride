@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Himalayan Escape — The XPulse 210 Climb</title>
+<link rel="canonical" href="https://ride.vipulanand.in/june/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -105,6 +106,17 @@
   .route .lbl{font-family:var(--mono);font-size:11px;fill:#c2cdc9;letter-spacing:.04em;}
   @keyframes draw{to{stroke-dashoffset:0;}}
   @keyframes pop{from{transform:scale(0);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+  .permalink{
+    display:inline-flex;align-items:center;gap:.6rem;margin-top:1.8rem;
+    font-family:var(--mono);font-size:.8rem;letter-spacing:.02em;
+    color:var(--paper);text-decoration:none;
+    border:1px solid rgba(255,255,255,.22);border-radius:3px;
+    padding:.62rem .95rem;transition:border-color .2s,background .2s;
+  }
+  .permalink:hover{border-color:var(--ember);background:rgba(207,79,44,.12);}
+  .permalink .arrow{color:var(--ember);font-size:1rem;line-height:1;}
+  .permalink .url{color:#9fb8b2;}
 
   /* ---------- AT A GLANCE ---------- */
   .glance{
@@ -213,6 +225,7 @@
   .manual .tribar{position:absolute;top:0;left:0;right:0;height:4px;
     background:linear-gradient(90deg,var(--tri-blue) 0 33.3%,#f6f3ea 33.3% 66.6%,var(--tri-red) 66.6% 100%);}
   .manual h2{font-family:var(--display);font-weight:800;font-size:clamp(1.5rem,4vw,2rem);margin:.4rem 0 .3rem;}
+  .manual-bike{width:54px;height:auto;color:var(--paper);display:block;margin:.2rem 0 .9rem;}
   .manual .sub{color:#9fb8b2;font-size:.92rem;margin:0 0 1.8rem;}
   .manual-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.1);}
   .mcell{background:var(--ink);padding:1.4rem;}
@@ -323,12 +336,34 @@
       <svg viewBox="0 0 620 64" role="img" aria-label="Climbing route profile">
         <path class="track" d="M10,52 C160,52 200,20 320,20 S480,12 610,8"/>
         <path class="draw" d="M10,52 C160,52 200,20 320,20 S480,12 610,8"/>
-        <circle class="node start" cx="10" cy="52" r="6"/>
-        <circle class="node end" cx="610" cy="8" r="7"/>
         <text class="lbl" x="2" y="46" dy="-14">KURUKSHETRA · 255m</text>
         <text class="lbl" x="610" y="8" dy="-12" text-anchor="end">NARKANDA · 2700m</text>
+
+        <!-- the rider: a dirt bike that climbs the route -->
+        <g class="rider" fill="none" stroke="#f4efe6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="-10" cy="-5" r="5" stroke-dasharray="1.5 2"/>
+          <circle cx="11" cy="-6" r="6" stroke-dasharray="1.6 2.1"/>
+          <circle cx="-10" cy="-5" r="1.4" fill="#cf4f2c" stroke="none"/>
+          <circle cx="11" cy="-6" r="1.4" fill="#cf4f2c" stroke="none"/>
+          <path d="M-10,-5 L-2,-8 L4,-9"/>
+          <path d="M-13,-13 L-11,-11 L-2,-11"/>
+          <path d="M-2,-11 L2,-15 L6,-13"/>
+          <path d="M6,-13 L11,-6"/>
+          <path d="M4,-15 Q10,-17 15,-13"/>
+          <path d="M6,-13 L8,-17 L10,-17"/>
+          <path d="M-3,-9 L-3,-4.5 L3,-4.5 L3,-8.5" fill="#f4efe6" stroke="none" opacity=".85"/>
+          <animateMotion begin="0.4s" dur="2.4s" fill="freeze" rotate="auto"
+            calcMode="spline" keyTimes="0;1" keySplines="0.4 0 0.1 1" keyPoints="0;0.97"
+            path="M10,52 C160,52 200,20 320,20 S480,12 610,8"/>
+        </g>
       </svg>
     </div>
+
+    <a class="permalink" href="https://ride.vipulanand.in/june/">
+      <span>Open the live route</span>
+      <span class="arrow">→</span>
+      <span class="url">ride.vipulanand.in/june</span>
+    </a>
   </div>
 </header>
 
@@ -482,6 +517,19 @@
   <!-- RIDER'S MANUAL -->
   <section class="manual">
     <div class="tribar" aria-hidden="true"></div>
+    <svg class="manual-bike" viewBox="-18 -21 38 25" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="-10" cy="-5" r="5" stroke-dasharray="1.5 2"/>
+      <circle cx="11" cy="-6" r="6" stroke-dasharray="1.6 2.1"/>
+      <circle cx="-10" cy="-5" r="1.4" fill="#cf4f2c" stroke="none"/>
+      <circle cx="11" cy="-6" r="1.4" fill="#cf4f2c" stroke="none"/>
+      <path d="M-10,-5 L-2,-8 L4,-9"/>
+      <path d="M-13,-13 L-11,-11 L-2,-11"/>
+      <path d="M-2,-11 L2,-15 L6,-13"/>
+      <path d="M6,-13 L11,-6"/>
+      <path d="M4,-15 Q10,-17 15,-13"/>
+      <path d="M6,-13 L8,-17 L10,-17"/>
+      <path d="M-3,-9 L-3,-4.5 L3,-4.5 L3,-8.5" fill="currentColor" stroke="none" opacity=".85"/>
+    </svg>
     <span class="eyebrow" style="color:var(--summit)">Before you ride</span>
     <h2>Rider's Manual — XPulse 210</h2>
     <p class="sub">Three things the mountain will ask of you.</p>
@@ -505,9 +553,20 @@
 
 <footer>
   <p class="sig">Ride safe · respect the mountains · leave no trace — <b>the tricolor</b> goes home clean.</p>
+  <p class="sig" style="margin-top:.6rem;"><a href="https://ride.vipulanand.in/june/" style="color:var(--spruce);text-decoration:none;">ride.vipulanand.in/june ↗</a></p>
 </footer>
 
 <script>
+(function(){
+  // respect reduced-motion for the SMIL-driven rider (CSS can't stop SMIL)
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches){
+    document.querySelectorAll('.rider animateMotion').forEach(function(a){
+      var g = a.parentNode;
+      g.removeChild(a);
+      g.setAttribute('transform','translate(596,8) rotate(-3)');
+    });
+  }
+})();
 (function(){
   var ONE_WAY = 331, DAYS_NIGHTS_FLOOR = 1;
   var roundTrip = true;
