@@ -125,9 +125,58 @@
     border-top:1px solid var(--rule);
   }
 
+  /* ── YEAR EXPORT ── */
+  .export-row{
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    flex-wrap:wrap; margin-top:2.6rem; padding-top:1.6rem; border-top:1px solid var(--rule);
+  }
+  .export-note{ font-size:0.85rem; font-style:italic; color:var(--muted); max-width:36ch; }
+  .export-btn{
+    font-family:'Josefin Sans',sans-serif; font-weight:400; font-size:0.68rem;
+    letter-spacing:0.18em; text-transform:uppercase;
+    background:var(--accent-deep); color:var(--parchment);
+    border:none; padding:0.85rem 1.3rem; cursor:pointer; white-space:nowrap;
+  }
+  .export-btn:active{ background:var(--accent); }
+
+  .modal-veil{
+    position:fixed; inset:0; background:rgba(18,14,8,0.72);
+    z-index:40; display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-veil.show{ display:flex; }
+  .modal{
+    background:var(--parchment); width:100%; max-width:700px;
+    max-height:88svh; overflow:auto; padding:1.3rem;
+    border-top:1px solid var(--rule);
+  }
+  .modal h2{
+    font-style:italic; font-weight:600; font-size:1.3rem;
+    color:var(--accent-deep); margin-bottom:0.8rem;
+  }
+  .modal textarea{
+    width:100%; min-height:320px;
+    font-family:'Josefin Sans',ui-monospace,monospace; font-size:0.8rem; line-height:1.6;
+    background:var(--card); border:1px solid var(--rule); padding:0.9rem; color:var(--ink);
+  }
+  .modal-actions{ display:flex; gap:0.7rem; margin-top:0.9rem; flex-wrap:wrap; }
+  .modal-actions button{
+    flex:1; min-width:120px; min-height:46px;
+    font-family:'Josefin Sans',sans-serif; font-size:0.68rem;
+    letter-spacing:0.15em; text-transform:uppercase; cursor:pointer;
+    border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  }
+  .modal-actions button.primary{ background:var(--accent-deep); color:var(--parchment); border:none; }
+  .modal-close{
+    display:block; margin:1rem auto 0; background:none; border:none;
+    color:var(--muted); font-family:'Josefin Sans',sans-serif; font-size:0.62rem;
+    letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; padding:0.5rem;
+  }
+
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
   @media (max-width:640px){
     .crumb,.intro,.ledger{ padding-left:1.3rem; padding-right:1.3rem; }
+    .export-row{ flex-direction:column; align-items:flex-start; }
+    .export-btn{ width:100%; }
   }
 </style>
 </head>
@@ -238,9 +287,124 @@
       </a>
     -->
   </div>
+
+  <div class="export-row">
+    <p class="export-note">Pull every month currently logged on this device into one file — for the 30th of December, or any day before it.</p>
+    <button class="export-btn" id="exportYearBtn">Export full year</button>
+  </div>
 </main>
 
 <footer>vipulanand.in &nbsp;·&nbsp; Inner Space Series &nbsp;·&nbsp; 2026</footer>
+
+<div class="modal-veil" id="modalVeil">
+  <div class="modal">
+    <h2>2026 — full year export</h2>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button id="copyBtn" class="primary">Copy</button>
+      <button id="downloadBtn">Download .txt</button>
+    </div>
+    <button class="modal-close" id="closeModal">Close</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const MONTHS = ['march','april','may','june','july','august','september','october','november','december'];
+
+  // Same base-path logic the month pages use, so the keys line up exactly.
+  const base = location.pathname.endsWith('/') ? location.pathname : location.pathname.replace(/[^/]*$/, '');
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function formatDateLong(dateStr){
+    if (!dateStr) return 'Undated';
+    const d = new Date(dateStr+'T00:00:00');
+    return d.toLocaleDateString(undefined, {day:'numeric', month:'long', year:'numeric'});
+  }
+  function formatTime12(t){
+    if (!t) return '';
+    const [h,m] = t.split(':').map(Number);
+    const ampm = h>=12 ? 'PM' : 'AM';
+    const h12 = ((h+11)%12)+1;
+    return h12+':'+pad(m)+' '+ampm;
+  }
+  function groupedByDate(entries){
+    const groups = {};
+    entries.forEach(e => {
+      const key = e.date || '';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+    Object.values(groups).forEach(g => g.sort((a,b)=> (a.time||'').localeCompare(b.time||'')));
+    return Object.keys(groups).sort().map(k => ({date:k, items:groups[k]}));
+  }
+
+  function buildYearExport(){
+    const now = new Date();
+    let out = `RIDE LOG — 2026 (FULL YEAR)\n`;
+    out += `Consolidated: ${now.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'})}\n`;
+
+    let monthsFound = 0;
+
+    MONTHS.forEach(month => {
+      const key = 'rideNotes::' + base + month + '/';
+      const tripKey = 'rideNotesTrip::' + base + month + '/';
+      let entries;
+      try { entries = JSON.parse(localStorage.getItem(key) || '[]'); }
+      catch(e){ entries = []; }
+      if (!entries.length) return;
+
+      monthsFound++;
+      const label = localStorage.getItem(tripKey) || (month.charAt(0).toUpperCase()+month.slice(1));
+      out += `\n${'█'.repeat(3)} ${month.toUpperCase()} — ${label}\n`;
+
+      groupedByDate(entries).forEach(g => {
+        out += `${'═'.repeat(27)}\n${formatDateLong(g.date)}\n${'═'.repeat(27)}\n`;
+        g.items.forEach(e => {
+          out += `\n${formatTime12(e.time) || '—'}\n`;
+          const facts = [];
+          if (e.place) facts.push(`📍 ${e.place}`);
+          if (e.odo) facts.push(`🛣 ${Number(e.odo).toLocaleString()} km`);
+          if (e.fuel) facts.push(`⛽ ${e.fuel}`);
+          if (facts.length) out += facts.join('   ') + '\n';
+          if (e.url) out += `🔗 ${e.url}\n`;
+          if (e.text) out += `\n${e.text}\n`;
+        });
+      });
+    });
+
+    if (!monthsFound){
+      out += `\nNo entries found yet on this device. Log a ride in one of the month pages, then export again.\n`;
+    }
+    return out;
+  }
+
+  $('exportYearBtn').addEventListener('click', () => {
+    $('exportText').value = buildYearExport();
+    $('modalVeil').classList.add('show');
+  });
+  $('closeModal').addEventListener('click', () => $('modalVeil').classList.remove('show'));
+  $('modalVeil').addEventListener('click', (ev)=>{ if(ev.target.id==='modalVeil') $('modalVeil').classList.remove('show'); });
+
+  $('copyBtn').addEventListener('click', async () => {
+    const txt = $('exportText').value;
+    try{ await navigator.clipboard.writeText(txt); }
+    catch(e){ $('exportText').select(); document.execCommand('copy'); }
+    $('copyBtn').textContent = 'Copied ✓';
+    setTimeout(()=> $('copyBtn').textContent='Copy', 1500);
+  });
+
+  $('downloadBtn').addEventListener('click', () => {
+    const blob = new Blob([$('exportText').value], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '2026-ride-log-full-year.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+})();
+</script>
 
 </body>
 </html>
