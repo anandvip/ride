@@ -1,1 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Inner Ledger — Notes · Inner Space Series</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Josefin+Sans:wght@200;300;400&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --ink:#1a1610;
+    --parchment:#f5f0e8;
+    --card:#efe8db;
+    --warm-mid:#c8b89a;
+    --accent:#8b4513;
+    --accent-deep:#6e3710;
+    --muted:#7a6e60;
+    --rule: rgba(139,69,19,0.2);
+  }
+  html{font-size:18px; scroll-behavior:smooth;}
+  body{
+    background:var(--parchment); color:var(--ink);
+    font-family:'Cormorant Garamond',Georgia,serif; font-weight:300;
+    line-height:1.8;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:1000; opacity:0.55;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+  :focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 
+  .crumb{
+    max-width:760px; margin:0 auto; padding:2rem 2rem 0;
+  }
+  .crumb a{
+    font-family:'Josefin Sans',sans-serif; font-size:0.62rem; letter-spacing:0.22em;
+    text-transform:uppercase; color:var(--muted); text-decoration:none;
+  }
+  .crumb a:hover{ color:var(--accent); }
+
+  /* ── INTRO ── */
+  .intro{ max-width:760px; margin:0 auto; padding:2.4rem 2rem 1rem; }
+  .eyebrow{
+    font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:0.65rem;
+    letter-spacing:0.35em; text-transform:uppercase; color:var(--muted); margin-bottom:1rem;
+  }
+  h1{
+    font-size:clamp(2.4rem,7vw,3.6rem); font-weight:300; line-height:1.05;
+    color:var(--accent-deep); letter-spacing:-0.01em; margin-bottom:0.6rem;
+  }
+  h1 em{ font-style:italic; color:var(--accent); }
+  .tagline{
+    font-style:italic; color:var(--muted); font-size:1.05rem; margin-bottom:2rem;
+  }
+
+  .lede p{ font-size:1.08rem; margin-bottom:1.3rem; max-width:62ch; }
+
+  .pull{
+    border-left:2px solid var(--accent); padding-left:1.4rem; margin:2rem 0 2.4rem;
+  }
+  .pull p{
+    font-size:1.25rem; font-style:italic; color:var(--accent-deep); line-height:1.5;
+  }
+
+  .privacy-tag{
+    display:inline-flex; align-items:center; gap:0.5rem;
+    font-family:'Josefin Sans',sans-serif; font-size:0.62rem; letter-spacing:0.15em;
+    text-transform:uppercase; color:var(--muted);
+    border:1px solid var(--rule); padding:0.5rem 0.9rem; margin-bottom:2.5rem;
+  }
+
+  /* ── YEAR + GRID ── */
+  .ledger{ max-width:760px; margin:0 auto; padding:1rem 2rem 4rem; }
+
+  .year-marker{
+    display:flex; align-items:baseline; gap:1.2rem; margin-bottom:2.2rem;
+  }
+  .year-marker .yr{
+    font-size:clamp(2rem,5vw,2.8rem); font-style:italic; font-weight:400;
+    color:var(--accent); line-height:1;
+  }
+  .year-marker .yr-note{
+    font-family:'Josefin Sans',sans-serif; font-weight:200; font-size:0.6rem;
+    letter-spacing:0.25em; text-transform:uppercase; color:var(--muted);
+  }
+  .year-marker::after{ content:''; flex:1; height:1px; background:var(--rule); align-self:center; }
+
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1.1rem;
+  }
+
+  .stub{
+    position:relative; background:var(--card); border:1px solid var(--rule);
+    padding:1.3rem 1.2rem 1.2rem; text-decoration:none; color:var(--ink);
+    transition:transform 0.4s ease, box-shadow 0.4s ease;
+  }
+  .stub::before{
+    content:''; position:absolute; top:-1px; left:0; right:0; height:2px;
+    background-image:linear-gradient(to right, var(--warm-mid) 55%, transparent 0%);
+    background-size:8px 2px; background-repeat:repeat-x; opacity:0.65;
+  }
+  a.stub.active:hover{
+    transform:translateY(-4px); box-shadow:0 14px 28px -18px rgba(26,22,16,0.5);
+  }
+  .stub.pending{ opacity:0.55; border-style:dashed; cursor:default; }
+
+  .mark{ font-size:0.8rem; color:var(--accent); margin-bottom:0.5rem; display:block; }
+  .stub.pending .mark{ color:var(--warm-mid); }
+
+  .month-name{ font-size:1.5rem; font-style:italic; font-weight:400; line-height:1.1; }
+  .stub.pending .month-name{ color:var(--muted); }
+
+  .month-meta{
+    margin-top:0.5rem; font-size:0.85rem; color:var(--muted); font-style:italic; line-height:1.4;
+  }
+
+  .go{
+    display:block; margin-top:0.9rem; font-family:'Josefin Sans',sans-serif; font-weight:300;
+    font-size:0.58rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--accent);
+  }
+
+  footer{
+    text-align:center; padding:2.2rem; font-family:'Josefin Sans',sans-serif; font-size:0.55rem;
+    letter-spacing:0.3em; text-transform:uppercase; color:var(--warm-mid);
+    border-top:1px solid var(--rule);
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+  @media (max-width:640px){
+    .crumb,.intro,.ledger{ padding-left:1.3rem; padding-right:1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crumb"><a href="../">&larr; Road Reflections</a></div>
+
+<section class="intro">
+  <p class="eyebrow">Inner Space Series · Notes</p>
+  <h1>The Inner <em>Ledger</em></h1>
+  <p class="tagline">Private notes, kept before the story is told.</p>
+
+  <div class="lede">
+    <p>
+      Before a ride becomes a story, it is only ever a note. A place name jotted at a
+      fuel stop. An odometer figure, a rough time, a thought that hasn't decided what
+      it means yet. Right now, this is the whole toolkit — a phone for stills, a
+      location pin for the map, and whatever the keyboard's dictation mic can catch
+      before the moment thins out. The helmet camera hasn't arrived yet; the
+      vlogging waits with it.
+    </p>
+  </div>
+
+  <div class="pull">
+    <p>Private. Local to this device. Written for no reader but the one who rode it.</p>
+  </div>
+
+  <p class="privacy-tag">🔒 Stored on this device only</p>
+</section>
+
+<main class="ledger">
+  <div class="year-marker">
+    <span class="yr">2026</span>
+    <span class="yr-note">The ledger, month by month</span>
+  </div>
+
+  <div class="grid">
+    <a class="stub active" href="march/">
+      <span class="mark">●</span>
+      <span class="month-name">March</span>
+      <p class="month-meta">Kurukshetra → Rishikesh → Kurukshetra</p>
+      <span class="go">Open notes →</span>
+    </a>
+
+    <a class="stub active" href="april/">
+      <span class="mark">●</span>
+      <span class="month-name">April</span>
+      <p class="month-meta">Narkanda, by Creta</p>
+      <span class="go">Open notes →</span>
+    </a>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">May</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <a class="stub active" href="june/">
+      <span class="mark">●</span>
+      <span class="month-name">June</span>
+      <p class="month-meta">Route to follow</p>
+      <span class="go">Open notes →</span>
+    </a>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">July</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">August</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">September</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">October</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">November</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <div class="stub pending">
+      <span class="mark">○</span>
+      <span class="month-name">December</span>
+      <p class="month-meta">Awaiting the ride</p>
+    </div>
+
+    <!--
+      TEMPLATE — once a month is ridden, replace its pending <div> with:
+      <a class="stub active" href="MONTH/">
+        <span class="mark">●</span>
+        <span class="month-name">MONTH</span>
+        <p class="month-meta">ROUTE OR ONE-LINE CONTEXT</p>
+        <span class="go">Open notes →</span>
+      </a>
+    -->
+  </div>
+</main>
+
+<footer>vipulanand.in &nbsp;·&nbsp; Inner Space Series &nbsp;·&nbsp; 2026</footer>
+
+</body>
+</html>
