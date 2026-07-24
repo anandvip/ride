@@ -1,1 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Ride Notes — Inner Space Series</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Josefin+Sans:wght@200;300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --ink:#1a1610;
+    --parchment:#f5f0e8;
+    --card:#efe8db;
+    --card-deep:#e6dcc9;
+    --warm-mid:#c8b89a;
+    --accent:#8b4513;
+    --accent-deep:#6e3710;
+    --muted:#7a6e60;
+    --rule: rgba(139,69,19,0.22);
+    --danger:#a33d2f;
+  }
+  html{font-size:17px;}
+  body{
+    background:var(--parchment);
+    color:var(--ink);
+    font-family:'Cormorant Garamond',Georgia,serif;
+    min-height:100svh;
+    padding-bottom:6rem;
+  }
+  ::selection{background:var(--accent);color:var(--parchment);}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 
+  /* ── HEADER ── */
+  header.top{
+    padding:1.6rem 1.2rem 1.1rem;
+    border-bottom:1px solid var(--rule);
+    position:sticky; top:0; z-index:20;
+    background:var(--parchment);
+  }
+  .eyebrow{
+    font-family:'Josefin Sans',sans-serif;
+    font-weight:300; font-size:0.6rem;
+    letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:0.5rem;
+  }
+  .trip-label{
+    width:100%;
+    font-family:'Cormorant Garamond',serif;
+    font-style:italic; font-weight:600;
+    font-size:1.5rem; color:var(--accent-deep);
+    background:transparent; border:none;
+    border-bottom:1px dashed var(--rule);
+    padding:0.2rem 0;
+  }
+  .trip-label::placeholder{color:var(--warm-mid); font-style:italic;}
+
+  main{max-width:640px; margin:0 auto; padding:1.2rem;}
+
+  /* ── QUICK ADD ── */
+  .composer{
+    background:var(--card);
+    border:1px solid var(--rule);
+    padding:1.2rem 1.1rem 1.3rem;
+    margin-bottom:2rem;
+  }
+  .row{display:flex; gap:0.6rem; flex-wrap:wrap; margin-bottom:0.8rem;}
+  .field{display:flex; flex-direction:column; gap:0.25rem; flex:1; min-width:120px;}
+  label.small{
+    font-family:'Josefin Sans',sans-serif; font-weight:300;
+    font-size:0.58rem; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  input[type=date], input[type=time], input[type=text], input[type=number], input[type=url]{
+    font-family:'Cormorant Garamond',serif; font-size:1.05rem;
+    background:var(--parchment); border:1px solid var(--rule);
+    padding:0.55rem 0.6rem; color:var(--ink); width:100%;
+  }
+  .quickdate{display:flex; gap:0.4rem; margin-top:0.3rem;}
+  .quickdate button{
+    font-family:'Josefin Sans',sans-serif; font-size:0.58rem;
+    letter-spacing:0.1em; text-transform:uppercase;
+    background:none; border:1px solid var(--rule); color:var(--muted);
+    padding:0.3rem 0.55rem; cursor:pointer;
+  }
+  .quickdate button:active{background:var(--accent); color:var(--parchment);}
+
+  .chips{display:flex; gap:0.5rem; flex-wrap:wrap; margin:0.9rem 0;}
+  .chip{
+    font-family:'Josefin Sans',sans-serif; font-weight:400; font-size:0.68rem;
+    letter-spacing:0.06em;
+    border:1px solid var(--accent); color:var(--accent);
+    background:none; padding:0.45rem 0.85rem; border-radius:100px;
+    cursor:pointer; min-height:38px;
+  }
+  .chip.active{background:var(--accent); color:var(--parchment);}
+  .hint{font-size:0.75rem; color:var(--muted); font-style:italic; margin-top:0.2rem;}
+
+  .fieldset-extra{display:none; margin-bottom:0.8rem;}
+  .fieldset-extra.show{display:block;}
+
+  textarea#noteText{
+    width:100%; min-height:120px; resize:vertical;
+    font-family:'Cormorant Garamond',serif; font-size:1.12rem; line-height:1.6;
+    background:var(--parchment); border:1px solid var(--rule);
+    padding:0.8rem; color:var(--ink);
+  }
+  textarea#noteText::placeholder{color:var(--warm-mid);}
+
+  .save-btn{
+    margin-top:1rem; width:100%;
+    font-family:'Josefin Sans',sans-serif; font-weight:400; font-size:0.75rem;
+    letter-spacing:0.2em; text-transform:uppercase;
+    background:var(--accent-deep); color:var(--parchment);
+    border:none; padding:0.95rem; cursor:pointer; min-height:48px;
+  }
+  .save-btn:active{background:var(--accent);}
+  .cancel-edit{
+    margin-top:0.6rem; width:100%; background:none; border:1px solid var(--rule);
+    color:var(--muted); font-family:'Josefin Sans',sans-serif; font-size:0.65rem;
+    letter-spacing:0.15em; text-transform:uppercase; padding:0.6rem; cursor:pointer;
+    display:none;
+  }
+  .cancel-edit.show{display:block;}
+
+  /* ── LOG ── */
+  .day-heading{
+    display:flex; align-items:baseline; gap:1rem; margin:2rem 0 0.8rem;
+  }
+  .day-heading .d{
+    font-style:italic; font-size:1.3rem; color:var(--accent-deep); white-space:nowrap;
+  }
+  .day-heading::after{content:''; flex:1; height:1px; background:var(--rule);}
+
+  .entry{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--rule);
+    margin-bottom:1rem;
+    padding:1rem 1.1rem 1.1rem;
+  }
+  .entry::before{
+    content:'';
+    position:absolute; top:-1px; left:0; right:0; height:2px;
+    background-image: linear-gradient(to right, var(--warm-mid) 60%, transparent 0%);
+    background-size: 10px 2px; background-repeat: repeat-x;
+    opacity:0.7;
+  }
+  .entry-time{
+    font-family:'Josefin Sans',sans-serif; font-size:0.6rem;
+    letter-spacing:0.2em; text-transform:uppercase; color:var(--muted);
+    margin-bottom:0.5rem;
+  }
+  .badges{display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.6rem;}
+  .badge{
+    font-family:'Josefin Sans',sans-serif; font-size:0.68rem;
+    background:var(--card-deep); border:1px solid var(--rule);
+    color:var(--accent-deep); padding:0.25rem 0.6rem;
+  }
+  .entry-link{
+    display:inline-block; font-size:0.82rem; color:var(--accent);
+    margin-bottom:0.5rem; word-break:break-all;
+  }
+  .entry-text{font-size:1.05rem; line-height:1.65; white-space:pre-wrap;}
+  .entry-actions{
+    display:flex; gap:1.2rem; margin-top:0.8rem;
+    padding-top:0.6rem; border-top:1px solid var(--rule);
+  }
+  .entry-actions button{
+    background:none; border:none; cursor:pointer;
+    font-family:'Josefin Sans',sans-serif; font-size:0.62rem;
+    letter-spacing:0.15em; text-transform:uppercase; color:var(--muted);
+    padding:0.3rem 0; min-height:32px;
+  }
+  .entry-actions button.danger{color:var(--danger);}
+
+  .empty{
+    text-align:center; padding:3rem 1rem; color:var(--muted);
+    font-style:italic; font-size:1.05rem;
+  }
+
+  /* ── EXPORT FAB + MODAL ── */
+  .fab{
+    position:fixed; right:1.1rem; bottom:1.1rem; z-index:30;
+    background:var(--accent-deep); color:var(--parchment);
+    border:none; padding:0.9rem 1.3rem;
+    font-family:'Josefin Sans',sans-serif; font-size:0.68rem;
+    letter-spacing:0.15em; text-transform:uppercase;
+    cursor:pointer; box-shadow:0 10px 24px -8px rgba(26,22,16,0.5);
+  }
+  .modal-veil{
+    position:fixed; inset:0; background:rgba(18,14,8,0.72);
+    z-index:40; display:none; align-items:flex-end; justify-content:center;
+  }
+  .modal-veil.show{display:flex;}
+  .modal{
+    background:var(--parchment); width:100%; max-width:680px;
+    max-height:88svh; overflow:auto; padding:1.3rem;
+    border-top:1px solid var(--rule);
+  }
+  .modal h2{
+    font-style:italic; font-weight:600; font-size:1.3rem;
+    color:var(--accent-deep); margin-bottom:0.8rem;
+  }
+  .modal textarea{
+    width:100%; min-height:280px;
+    font-family:'Josefin Sans',ui-monospace,monospace; font-size:0.82rem; line-height:1.6;
+    background:var(--card); border:1px solid var(--rule); padding:0.9rem; color:var(--ink);
+  }
+  .modal-actions{display:flex; gap:0.7rem; margin-top:0.9rem; flex-wrap:wrap;}
+  .modal-actions button{
+    flex:1; min-width:120px; min-height:46px;
+    font-family:'Josefin Sans',sans-serif; font-size:0.68rem;
+    letter-spacing:0.15em; text-transform:uppercase; cursor:pointer;
+    border:1px solid var(--rule); background:var(--card); color:var(--ink);
+  }
+  .modal-actions button.primary{background:var(--accent-deep); color:var(--parchment); border:none;}
+  .modal-close{
+    display:block; margin:1rem auto 0; background:none; border:none;
+    color:var(--muted); font-family:'Josefin Sans',sans-serif; font-size:0.62rem;
+    letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; padding:0.5rem;
+  }
+
+  .footnote{
+    text-align:center; font-size:0.7rem; color:var(--muted);
+    font-family:'Josefin Sans',sans-serif; letter-spacing:0.05em;
+    margin-top:2rem; line-height:1.7;
+  }
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <p class="eyebrow">Inner Space Series · Notes</p>
+  <input id="tripLabel" class="trip-label" type="text" placeholder="Name this trip (e.g. March — Kurukshetra to Rishikesh)" />
+</header>
+
+<main>
+
+  <!-- ══ COMPOSER ══ -->
+  <section class="composer">
+    <div class="row">
+      <div class="field">
+        <label class="small" for="entryDate">Date</label>
+        <input type="date" id="entryDate" />
+        <div class="quickdate">
+          <button type="button" id="btnToday">Today</button>
+          <button type="button" id="btnYesterday">Yesterday</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="small" for="entryTime">Time</label>
+        <input type="time" id="entryTime" />
+      </div>
+    </div>
+
+    <div class="chips">
+      <button type="button" class="chip" data-target="wrap-place">📍 Place</button>
+      <button type="button" class="chip" data-target="wrap-odo">🛣 Odo</button>
+      <button type="button" class="chip" data-target="wrap-fuel">⛽ Fuel</button>
+      <button type="button" class="chip" data-target="wrap-link">🔗 Link</button>
+    </div>
+
+    <div class="fieldset-extra" id="wrap-place">
+      <label class="small" for="fPlace">Place / location</label>
+      <input type="text" id="fPlace" placeholder="e.g. Devprayag" />
+    </div>
+    <div class="fieldset-extra" id="wrap-odo">
+      <label class="small" for="fOdo">Odo reading (km)</label>
+      <input type="number" inputmode="numeric" id="fOdo" placeholder="e.g. 41220" />
+      <p class="hint" id="odoHint"></p>
+    </div>
+    <div class="fieldset-extra" id="wrap-fuel">
+      <label class="small" for="fFuel">Fuel refill</label>
+      <input type="text" id="fFuel" placeholder="e.g. 4.2L · ₹450" />
+    </div>
+    <div class="fieldset-extra" id="wrap-link">
+      <label class="small" for="fLink">Link (map pin, photo, video)</label>
+      <input type="url" id="fLink" placeholder="Paste a URL" />
+    </div>
+
+    <label class="small" for="noteText" style="display:block; margin-bottom:0.3rem;">Note</label>
+    <textarea id="noteText" placeholder="What's happening right now — tap the mic on your keyboard to dictate…"></textarea>
+
+    <button class="save-btn" id="saveBtn">Log this entry</button>
+    <button class="cancel-edit" id="cancelEdit">Cancel edit</button>
+  </section>
+
+  <!-- ══ LOG ══ -->
+  <section id="log"></section>
+
+</main>
+
+<button class="fab" id="exportFab">Export log</button>
+
+<div class="modal-veil" id="modalVeil">
+  <div class="modal">
+    <h2>Export as text</h2>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button id="copyBtn" class="primary">Copy</button>
+      <button id="downloadBtn">Download .txt</button>
+    </div>
+    <button class="modal-close" id="closeModal">Close</button>
+  </div>
+</div>
+
+<p class="footnote">Saved only on this device, in this browser.<br/>Export often — it's your only backup.</p>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'rideNotes::' + location.pathname;
+  const DRAFT_KEY = 'rideNotesDraft::' + location.pathname;
+  const TRIP_KEY = 'rideNotesTrip::' + location.pathname;
+
+  const $ = id => document.getElementById(id);
+  const entryDate = $('entryDate'), entryTime = $('entryTime');
+  const fPlace=$('fPlace'), fOdo=$('fOdo'), fFuel=$('fFuel'), fLink=$('fLink');
+  const noteText = $('noteText');
+  const saveBtn = $('saveBtn'), cancelEdit = $('cancelEdit');
+  const logEl = $('log');
+  const tripLabel = $('tripLabel');
+
+  let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let editingId = null;
+
+  // ── trip label ──
+  tripLabel.value = localStorage.getItem(TRIP_KEY) || '';
+  tripLabel.addEventListener('input', () => localStorage.setItem(TRIP_KEY, tripLabel.value));
+
+  // ── chips toggle extra fields ──
+  document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const target = $(chip.dataset.target);
+      const showing = target.classList.toggle('show');
+      chip.classList.toggle('active', showing);
+      if (showing) target.querySelector('input').focus();
+    });
+  });
+
+  // ── quick date buttons ──
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function toDateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function toTimeStr(d){ return pad(d.getHours())+':'+pad(d.getMinutes()); }
+
+  $('btnToday').addEventListener('click', () => entryDate.value = toDateStr(new Date()));
+  $('btnYesterday').addEventListener('click', () => {
+    const d = new Date(); d.setDate(d.getDate()-1);
+    entryDate.value = toDateStr(d);
+  });
+
+  function defaultDate(){
+    if (entries.length){
+      const sorted = [...entries].sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+      return sorted[sorted.length-1].date;
+    }
+    return toDateStr(new Date());
+  }
+
+  function resetForm(){
+    editingId = null;
+    entryDate.value = defaultDate();
+    entryTime.value = toTimeStr(new Date());
+    fPlace.value=''; fOdo.value=''; fFuel.value=''; fLink.value='';
+    noteText.value='';
+    document.querySelectorAll('.fieldset-extra').forEach(f=>f.classList.remove('show'));
+    document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+    saveBtn.textContent = 'Log this entry';
+    cancelEdit.classList.remove('show');
+    updateOdoHint();
+    localStorage.removeItem(DRAFT_KEY);
+  }
+
+  function updateOdoHint(){
+    const withOdo = entries.filter(e=>e.odo).sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+    if (withOdo.length){
+      $('odoHint').textContent = 'Last logged: ' + Number(withOdo[withOdo.length-1].odo).toLocaleString() + ' km';
+    } else {
+      $('odoHint').textContent = '';
+    }
+  }
+
+  // ── draft autosave (protects an in-progress dictation) ──
+  function saveDraft(){
+    if (editingId) return; // don't draft-save while editing an existing entry
+    const draft = {date:entryDate.value, time:entryTime.value, place:fPlace.value, odo:fOdo.value, fuel:fFuel.value, url:fLink.value, text:noteText.value};
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }
+  [entryDate, entryTime, fPlace, fOdo, fFuel, fLink, noteText].forEach(el=>{
+    el.addEventListener('input', saveDraft);
+  });
+
+  function restoreDraft(){
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    try{
+      const d = JSON.parse(raw);
+      if (d.text || d.place || d.odo || d.fuel || d.url){
+        entryDate.value = d.date || defaultDate();
+        entryTime.value = d.time || toTimeStr(new Date());
+        fPlace.value = d.place||''; fOdo.value = d.odo||''; fFuel.value = d.fuel||''; fLink.value = d.url||'';
+        noteText.value = d.text||'';
+        if (d.place) showField('wrap-place');
+        if (d.odo) showField('wrap-odo');
+        if (d.fuel) showField('wrap-fuel');
+        if (d.url) showField('wrap-link');
+      }
+    }catch(e){}
+  }
+  function showField(id){
+    $(id).classList.add('show');
+    document.querySelector('.chip[data-target="'+id+'"]').classList.add('active');
+  }
+
+  // ── save / update entry ──
+  saveBtn.addEventListener('click', () => {
+    if (!noteText.value.trim() && !fPlace.value && !fOdo.value && !fFuel.value && !fLink.value){
+      noteText.focus();
+      return;
+    }
+    const data = {
+      id: editingId || (Date.now()+'-'+Math.random().toString(36).slice(2)),
+      date: entryDate.value || toDateStr(new Date()),
+      time: entryTime.value,
+      place: fPlace.value.trim(),
+      odo: fOdo.value.trim(),
+      fuel: fFuel.value.trim(),
+      url: fLink.value.trim(),
+      text: noteText.value.trim()
+    };
+    if (editingId){
+      entries = entries.map(e => e.id===editingId ? data : e);
+    } else {
+      entries.push(data);
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    resetForm();
+    render();
+  });
+
+  cancelEdit.addEventListener('click', resetForm);
+
+  // ── render log, grouped by date ──
+  function formatDateLong(dateStr){
+    if (!dateStr) return 'Undated';
+    const d = new Date(dateStr+'T00:00:00');
+    return d.toLocaleDateString(undefined, {day:'numeric', month:'long', year:'numeric'});
+  }
+  function formatTime12(t){
+    if (!t) return '';
+    const [h,m] = t.split(':').map(Number);
+    const ampm = h>=12 ? 'PM' : 'AM';
+    const h12 = ((h+11)%12)+1;
+    return h12+':'+pad(m)+' '+ampm;
+  }
+
+  function groupedEntries(){
+    const groups = {};
+    entries.forEach(e => {
+      const key = e.date || '';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(e);
+    });
+    Object.values(groups).forEach(g => g.sort((a,b)=> (a.time||'').localeCompare(b.time||'')));
+    return Object.keys(groups).sort().map(k => ({date:k, items:groups[k]}));
+  }
+
+  function render(){
+    updateOdoHint();
+    const groups = groupedEntries();
+    if (!groups.length){
+      logEl.innerHTML = '<p class="empty">No entries yet — log your first stop above.</p>';
+      return;
+    }
+    logEl.innerHTML = groups.map(g => `
+      <div class="day-heading"><span class="d">${formatDateLong(g.date)}</span></div>
+      ${g.items.map(e => renderEntry(e)).join('')}
+    `).join('');
+
+    logEl.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.addEventListener('click', () => startEdit(btn.dataset.edit));
+    });
+    logEl.querySelectorAll('[data-delete]').forEach(btn=>{
+      btn.addEventListener('click', () => deleteEntry(btn.dataset.delete));
+    });
+  }
+
+  function renderEntry(e){
+    const badges = [];
+    if (e.place) badges.push(`<span class="badge">📍 ${escapeHtml(e.place)}</span>`);
+    if (e.odo) badges.push(`<span class="badge">🛣 ${Number(e.odo).toLocaleString()} km</span>`);
+    if (e.fuel) badges.push(`<span class="badge">⛽ ${escapeHtml(e.fuel)}</span>`);
+    return `
+      <article class="entry">
+        <div class="entry-time">${formatTime12(e.time) || '&nbsp;'}</div>
+        ${badges.length ? `<div class="badges">${badges.join('')}</div>` : ''}
+        ${e.url ? `<a class="entry-link" href="${escapeAttr(e.url)}" target="_blank" rel="noopener">${escapeHtml(e.url)}</a>` : ''}
+        ${e.text ? `<div class="entry-text">${escapeHtml(e.text)}</div>` : ''}
+        <div class="entry-actions">
+          <button data-edit="${e.id}">Edit</button>
+          <button data-delete="${e.id}" class="danger">Delete</button>
+        </div>
+      </article>
+    `;
+  }
+
+  function escapeHtml(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  function startEdit(id){
+    const e = entries.find(x=>x.id===id);
+    if (!e) return;
+    editingId = id;
+    entryDate.value = e.date; entryTime.value = e.time;
+    fPlace.value = e.place; fOdo.value = e.odo; fFuel.value = e.fuel; fLink.value = e.url;
+    noteText.value = e.text;
+    if (e.place) showField('wrap-place');
+    if (e.odo) showField('wrap-odo');
+    if (e.fuel) showField('wrap-fuel');
+    if (e.url) showField('wrap-link');
+    saveBtn.textContent = 'Update entry';
+    cancelEdit.classList.add('show');
+    window.scrollTo({top:0, behavior:'smooth'});
+    noteText.focus();
+  }
+
+  function deleteEntry(id){
+    if (!confirm('Delete this entry? This cannot be undone.')) return;
+    entries = entries.filter(e=>e.id!==id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    render();
+  }
+
+  // ── export ──
+  function buildExport(){
+    const trip = tripLabel.value.trim() || 'Untitled trip';
+    const now = new Date();
+    let out = `RIDE NOTES — ${trip}\n`;
+    out += `Exported: ${now.toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'})}, ${formatTime12(pad(now.getHours())+':'+pad(now.getMinutes()))}\n`;
+    const groups = groupedEntries();
+    groups.forEach(g => {
+      out += `\n${'═'.repeat(27)}\n${formatDateLong(g.date)}\n${'═'.repeat(27)}\n`;
+      g.items.forEach(e => {
+        out += `\n${formatTime12(e.time) || '—'}\n`;
+        const facts = [];
+        if (e.place) facts.push(`📍 ${e.place}`);
+        if (e.odo) facts.push(`🛣 ${Number(e.odo).toLocaleString()} km`);
+        if (e.fuel) facts.push(`⛽ ${e.fuel}`);
+        if (facts.length) out += facts.join('   ') + '\n';
+        if (e.url) out += `🔗 ${e.url}\n`;
+        if (e.text) out += `\n${e.text}\n`;
+      });
+    });
+    return out;
+  }
+
+  $('exportFab').addEventListener('click', () => {
+    $('exportText').value = buildExport();
+    $('modalVeil').classList.add('show');
+  });
+  $('closeModal').addEventListener('click', () => $('modalVeil').classList.remove('show'));
+  $('modalVeil').addEventListener('click', (ev)=>{ if(ev.target.id==='modalVeil') $('modalVeil').classList.remove('show'); });
+
+  $('copyBtn').addEventListener('click', async () => {
+    const txt = $('exportText').value;
+    try{
+      await navigator.clipboard.writeText(txt);
+      $('copyBtn').textContent = 'Copied ✓';
+    }catch(e){
+      $('exportText').select();
+      document.execCommand('copy');
+      $('copyBtn').textContent = 'Copied ✓';
+    }
+    setTimeout(()=> $('copyBtn').textContent='Copy', 1500);
+  });
+
+  $('downloadBtn').addEventListener('click', () => {
+    const blob = new Blob([$('exportText').value], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const trip = (tripLabel.value.trim() || 'ride-notes').toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    a.download = trip + '.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  // ── init ──
+  resetForm();
+  restoreDraft();
+  render();
+})();
+</script>
+
+</body>
+</html>
